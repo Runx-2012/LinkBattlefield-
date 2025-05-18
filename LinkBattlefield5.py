@@ -12,12 +12,12 @@ start_time0 = time.time()  # 记录开始时间
 
 
 
-HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,[8],0,0],4:[1412800,0],5:[1425000,[1]],
+HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,[8],1400200,0],4:[1412800,0],5:[1425000,[1]],
       6:[1226720,0],7:[1468600,0],8:[1502400,0],9:[1313930,[2]],10:[1600000,0],
       11:[2082750,[3],0,0],12:[2356560,[3],0,0],13:[2299250,[2]],14:[2630880,0],15:[2801250,0],
-      16:[2774000,[1]],17:[2978250,0],18:[3208000,[3],0,0],19:[3464750,[8],0,0],20:[3750000,[1]],
-      21:[4878300,[2]],22:[6353280,0],23:[6325110,[2]],24:[6247200,[8],0,0],25:[4525000,[2,3],0,0],
-      26:[7372800,[8],0,0],27:[8004900,[1,8],0,0],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
+      16:[2774000,[1]],17:[2978250,0],18:[3208000,[3],0,0],19:[3464750,[8],1400200,0],20:[3750000,[1]],
+      21:[4878300,[2]],22:[6353280,0],23:[6325110,[2]],24:[6247200,[8],1400200,0],25:[4525000,[2,3],0,0],
+      26:[7372800,[8],1400200,0],27:[8004900,[1,8],1400200,0],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
       31:[7358200,[1]],32:[7953600,[2]],33:[12881100,[2]]}
 #3-时间吞噬，每过3秒减少1秒召唤时间
 #8-恢复血量，每过3秒恢复10%的血量
@@ -64,8 +64,9 @@ P_list[32] = [6,90,2,10,0,"主教",2,0]
 
 def filtered_permutations(input_dict):
     # 筛选出value小于10的元素
-    filtered_items = [item for item in input_dict.items() if item[1][0] <= 5]
-    return list(permutations(filtered_items, 4))
+    filtered_items = [key for key, value in input_dict.items() if value[0] <= 6]
+    #filtered_items = [item for item in input_dict.items() if item[1][0] <= 6]
+    return list(permutations(filtered_items, 6))
 temp = filtered_permutations(P_list)
 # end_time = time.time()  # 记录结束时间
 # run_time = end_time - start_time0  # 计算运行时间
@@ -88,38 +89,7 @@ def sum_damage(atk_para):
         raise ValueError("攻击间隔校验出错")
     return ad, ap, atk_count
 '''检查伤害是否打过BOSS'''
-def check_damage(zongshanghai, Bossxueliang, wulishanghai, mofashanghai,Boss_Skill, zhandouli=300000):
-    minkey = min(Bossxueliang)
-    if Bossxueliang[minkey][1] != 0:
-        if 1 in Bossxueliang[minkey][1]:
-            wulishanghai = wulishanghai *0.7
-        if 2 in Bossxueliang[minkey][1]:
-            mofashanghai = mofashanghai *0.7
-    Damage = wulishanghai + mofashanghai
-    Damage = Damage * zhandouli / 100
-    Total_Damage = zongshanghai + Damage
-    if Damage != 0:
-        #print("当前BOSS血量上限",f"{Bossxueliang[minkey][0]:,.0f}","已累计伤害",f"{Total_Damage:,.0f}")
-        #print("当前层数", minkey)
-        if Bossxueliang[minkey][0]-Total_Damage <=0:
-            Total_Damage = 0
-            #print("消除Boss，进入下一秒")
-            del Bossxueliang[minkey]
-        # else:
-        #     '''初始角色在56秒时（第一秒结束时59，第二秒结束58，第三秒结束57）'''
-        #     if 8 in Bossxueliang[minkey][1]:
-        #         if Bossxueliang[minkey][3] == 0:
-        #             pass
-        #         elif Bossxueliang[minkey][3] % 3 == 0:
-        #             pass
-        #
-        #
 
-                #Bossxueliang[minkey][3] = Bossxueliang[minkey][3] + 1
-
-
-
-    return minkey,Total_Damage
 
 '''检查BOSS技能3-3秒时间增加'''
 def special_check_HP(Bossxueliang):
@@ -137,9 +107,9 @@ def special_check_HP(Bossxueliang):
                 pass
             elif Bossxueliang[minkey][3] % 3 == 0:
                 output.append(8)
-                '''初始角色在56秒时（第一秒结束时59，第二秒结束58，第三秒结束57）'''
+        if {3, 8} & set(Bossxueliang[minkey][1]):
+            Bossxueliang[minkey][3] = Bossxueliang[minkey][3] + 1
     return output
-
 
 #物伤-1；魔法-2，友军伤害-3，,三次2倍-5，重制-7，概率两倍-9，
 '''BUFF check'''
@@ -181,9 +151,6 @@ def atk_pre_check(a,b,c,d):
         d = d*ap_buff
     return c,d
 
-
-
-
 '''计算11-攻击加次数，8增加时间，4-加伤害，5-治疗'''
 def atk_post_check(a,b):
     if a[b][3] == 11:#加攻击次数-11
@@ -199,11 +166,37 @@ def atk_post_check(a,b):
                     a[key][4] = 0
 
 
+
+def check_damage(Bossxueliang, wulishanghai, mofashanghai,Boss_Skill, zhandouli=300000):
+    minkey = min(Bossxueliang)
+    if Bossxueliang[minkey][1] != 0:
+        if 1 in Bossxueliang[minkey][1]:
+            wulishanghai = wulishanghai *0.7
+        if 2 in Bossxueliang[minkey][1]:
+            mofashanghai = mofashanghai *0.7
+    Damage = wulishanghai + mofashanghai
+    Damage = Damage * zhandouli / 100
+    if Damage != 0:
+        #print("当前层数", minkey)
+        #print(Bossxueliang[minkey][0])
+        if Bossxueliang[minkey][0]-Damage <=0:
+            #print("消除Boss，进入下一秒")#when 伤害超过剩余血量
+            del Bossxueliang[minkey]
+        elif 8 in Boss_Skill:
+            Bossxueliang[minkey][0] = min(Bossxueliang[minkey][0]+ Bossxueliang[minkey][2]*0.1,Bossxueliang[minkey][0])
+            #print(minkey,"号boss释放了8-3秒回血")
+        else:
+            Bossxueliang[minkey][0]  = Bossxueliang[minkey][0]-Damage
+
+    return minkey
+
+
 def process_item(shared_dict,lock,item):
     #print("进入主进程")
     HP = copy.deepcopy(HP_list)
     P = copy.deepcopy(P_list)
-    temp1 = [item[0][0], item[1][0], item[2][0], item[3][0]]
+    temp1 = [item[0], item[1], item[2], item[3]]
+    #temp1 = [item[0][0], item[1][0], item[2][0], item[3][0]]
     sorted_indices = sorted([k for k in P.keys() if k not in temp1], key=lambda x: P[x][0])
     sorted_indices = temp1 + sorted_indices
     len_sorted_indices = len(sorted_indices)
@@ -218,7 +211,6 @@ def process_item(shared_dict,lock,item):
     final_list.append(sorted_indices[0])
 
     global_count = 1
-    Total_Damage = 0
     Damage1 = 0
     Damage2 = 0
 
@@ -239,7 +231,7 @@ def process_item(shared_dict,lock,item):
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
 
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey = check_damage(HP, Damage1, Damage2,chkeck_HP)
         current_time += 1
         Damage1 = 0
         Damage2 = 0
@@ -267,7 +259,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey= check_damage(HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -290,7 +282,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey = check_damage(HP, Damage1, Damage2,chkeck_HP)
         current_time += 1
         Damage1 = 0
         Damage2 = 0
@@ -317,7 +309,7 @@ def process_item(shared_dict,lock,item):
             if ad>0 or ap>0:
                 atk_post_check(Pgroup, key)
 
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey= check_damage( HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -338,7 +330,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey= check_damage( HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -365,7 +357,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey= check_damage( HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -427,7 +419,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad>0 or ap>0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
+        minkey= check_damage( HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         #print("minkey层数===", minkey)
@@ -464,7 +456,7 @@ if __name__ == '__main__':
         shared_dict['max_first_4_result'] = 0  # 初始值
         lock = manager.Lock()
 
-        with multiprocessing.Pool() as pool:
+        with multiprocessing.Pool(processes=5) as pool:
             print('进入主进程')
             temp = temp[0:60000]
             results = pool.starmap(process_item, [(shared_dict, lock, item) for item in temp])
