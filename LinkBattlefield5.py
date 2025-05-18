@@ -12,14 +12,15 @@ start_time0 = time.time()  # 记录开始时间
 
 
 
-HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,0],4:[1412800,0],5:[1425000,[1]],
+HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,[8],0,0],4:[1412800,0],5:[1425000,[1]],
       6:[1226720,0],7:[1468600,0],8:[1502400,0],9:[1313930,[2]],10:[1600000,0],
       11:[2082750,[3],0,0],12:[2356560,[3],0,0],13:[2299250,[2]],14:[2630880,0],15:[2801250,0],
-      16:[2774000,[1]],17:[2978250,0],18:[3208000,[3],0,0],19:[3464750,0],20:[3750000,[1]],
-      21:[4878300,[2]],22:[6353280,0],23:[6325110,[2]],24:[6247200,0],25:[4525000,[2,3],0,0],
-      26:[7372800,0],27:[8004900,[1]],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
+      16:[2774000,[1]],17:[2978250,0],18:[3208000,[3],0,0],19:[3464750,[8],0,0],20:[3750000,[1]],
+      21:[4878300,[2]],22:[6353280,0],23:[6325110,[2]],24:[6247200,[8],0,0],25:[4525000,[2,3],0,0],
+      26:[7372800,[8],0,0],27:[8004900,[1,8],0,0],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
       31:[7358200,[1]],32:[7953600,[2]],33:[12881100,[2]]}
 #3-时间吞噬，每过3秒减少1秒召唤时间
+#8-恢复血量，每过3秒恢复10%的血量
 
 
 #物伤-1；魔法-2，友军伤害-3，,三次2倍-5，重制-7，概率两倍-9，
@@ -87,7 +88,7 @@ def sum_damage(atk_para):
         raise ValueError("攻击间隔校验出错")
     return ad, ap, atk_count
 '''检查伤害是否打过BOSS'''
-def check_damage(zongshanghai, Bossxueliang, wulishanghai, mofashanghai, zhandouli=300000):
+def check_damage(zongshanghai, Bossxueliang, wulishanghai, mofashanghai,Boss_Skill, zhandouli=300000):
     minkey = min(Bossxueliang)
     if Bossxueliang[minkey][1] != 0:
         if 1 in Bossxueliang[minkey][1]:
@@ -104,8 +105,20 @@ def check_damage(zongshanghai, Bossxueliang, wulishanghai, mofashanghai, zhandou
             Total_Damage = 0
             #print("消除Boss，进入下一秒")
             del Bossxueliang[minkey]
-        Damage1 = 0
-        Damage2 = 0
+        # else:
+        #     '''初始角色在56秒时（第一秒结束时59，第二秒结束58，第三秒结束57）'''
+        #     if 8 in Bossxueliang[minkey][1]:
+        #         if Bossxueliang[minkey][3] == 0:
+        #             pass
+        #         elif Bossxueliang[minkey][3] % 3 == 0:
+        #             pass
+        #
+        #
+
+                #Bossxueliang[minkey][3] = Bossxueliang[minkey][3] + 1
+
+
+
     return minkey,Total_Damage
 
 '''检查BOSS技能3-3秒时间增加'''
@@ -119,8 +132,12 @@ def special_check_HP(Bossxueliang):
                 pass
             elif Bossxueliang[minkey][3] % 3 == 0:
                 output.append(3)
+        if 8 in Bossxueliang[minkey][1]:  ##特殊技能包括3-时间增加
+            if Bossxueliang[minkey][3] == 0:
+                pass
+            elif Bossxueliang[minkey][3] % 3 == 0:
+                output.append(8)
                 '''初始角色在56秒时（第一秒结束时59，第二秒结束58，第三秒结束57）'''
-            Bossxueliang[minkey][3] = Bossxueliang[minkey][3] +1
     return output
 
 
@@ -222,7 +239,7 @@ def process_item(shared_dict,lock,item):
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
 
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         current_time += 1
         Damage1 = 0
         Damage2 = 0
@@ -250,7 +267,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -273,7 +290,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         current_time += 1
         Damage1 = 0
         Damage2 = 0
@@ -300,7 +317,7 @@ def process_item(shared_dict,lock,item):
             if ad>0 or ap>0:
                 atk_post_check(Pgroup, key)
 
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -321,7 +338,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -348,7 +365,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad > 0 or ap > 0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         current_time += 1
@@ -410,7 +427,7 @@ def process_item(shared_dict,lock,item):
             Damage2 = Damage2 + ap
             if ad>0 or ap>0:
                 atk_post_check(Pgroup, key)
-        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2)
+        minkey, Total_Damage = check_damage(Total_Damage, HP, Damage1, Damage2,chkeck_HP)
         Damage1 = 0
         Damage2 = 0
         #print("minkey层数===", minkey)
@@ -451,12 +468,7 @@ if __name__ == '__main__':
             print('进入主进程')
             temp = temp[0:60000]
             results = pool.starmap(process_item, [(shared_dict, lock, item) for item in temp])
-
-        # print(f"最终全局最大值: {shared_dict['minkey']}")
-        # with multiprocessing.Pool(processes=8) as pool:
-        #     # 使用偏函数绑定共享变量
-        #     #temp = temp[0:10000]
-        #     results = pool.starmap(process_item, [(shared_dict, lock,item) for item in temp])
+            # 使用偏函数绑定共享变量
 
     final_final_list = {level: final_list for level, final_list in results}
 
@@ -470,12 +482,12 @@ if __name__ == '__main__':
     result1 = []
     for i in result:
         result1.append(P_list[i][5])
-    #print("最大的层数是", max_key, "阵容为", result1)
+    print("最大的层数是", max_key, "阵容为", result1)
     result1 = []
     result = final_final_list[min_key]
     for i in result:
         result1.append(P_list[i][5])
-    #print("最小的层数是", min_key, "阵容为", result1)
+    print("最小的层数是", min_key, "阵容为", result1)
 
     end_time = time.time()    # 记录结束时间
     run_time = end_time - start_time1  # 计算运行时间
