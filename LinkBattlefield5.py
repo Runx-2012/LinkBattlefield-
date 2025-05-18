@@ -12,15 +12,17 @@ start_time0 = time.time()  # 记录开始时间
 
 
 
-HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,[8],1400200,0],4:[1412800,0],5:[1425000,[1]],
+HP_list = {1:[1400200,[3],0,0],2:[1401600,0],3:[1194590,[8],1400200,0],4:[1412800,[9],0,0],5:[1425000,[1]],
       6:[1226720,0],7:[1468600,0],8:[1502400,0],9:[1313930,[2]],10:[1600000,0],
-      11:[2082750,[3],0,0],12:[2356560,[3],0,0],13:[2299250,[2]],14:[2630880,0],15:[2801250,0],
-      16:[2774000,[1]],17:[2978250,0],18:[3208000,[3],0,0],19:[3464750,[8],1400200,0],20:[3750000,[1]],
-      21:[4878300,[2]],22:[6353280,0],23:[6325110,[2]],24:[6247200,[8],1400200,0],25:[4525000,[2,3],0,0],
-      26:[7372800,[8],1400200,0],27:[8004900,[1,8],1400200,0],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
+      11:[2082750,[3,4],0,0],12:[2356560,[3],0,0],13:[2299250,[2]],14:[2630880,0],15:[2801250,0],
+      16:[2774000,[1]],17:[2978250,[9],0,0],18:[3208000,[3],0,0],19:[3464750,[8],1400200,0],20:[3750000,[1]],
+      21:[4878300,[2,4]],22:[6353280,0],23:[6325110,[2]],24:[6247200,[8,9],1400200,0],25:[4525000,[2,3,9],0,0],
+      26:[7372800,[8,9],1400200,0],27:[8004900,[1,8],1400200,0],28:[8685600,0],29:[9416700,[1]],30:[11220000,[1]],
       31:[7358200,[1]],32:[7953600,[2]],33:[12881100,[2]]}
 #3-时间吞噬，每过3秒减少1秒召唤时间
+#4-CD增加
 #8-恢复血量，每过3秒恢复10%的血量
+#9-次数回血，每段1%，汇总回血
 
 
 #物伤-1；魔法-2，友军伤害-3，,三次2倍-5，重制-7，概率两倍-9，
@@ -66,7 +68,7 @@ def filtered_permutations(input_dict):
     # 筛选出value小于10的元素
     filtered_items = [key for key, value in input_dict.items() if value[0] <= 6]
     #filtered_items = [item for item in input_dict.items() if item[1][0] <= 6]
-    return list(permutations(filtered_items, 6))
+    return list(permutations(filtered_items, 5))
 temp = filtered_permutations(P_list)
 # end_time = time.time()  # 记录结束时间
 # run_time = end_time - start_time0  # 计算运行时间
@@ -176,17 +178,20 @@ def check_damage(Bossxueliang, wulishanghai, mofashanghai,Boss_Skill, zhandouli=
             mofashanghai = mofashanghai *0.7
     Damage = wulishanghai + mofashanghai
     Damage = Damage * zhandouli / 100
-    if Damage != 0:
-        #print("当前层数", minkey)
-        #print(Bossxueliang[minkey][0])
-        if Bossxueliang[minkey][0]-Damage <=0:
-            #print("消除Boss，进入下一秒")#when 伤害超过剩余血量
-            del Bossxueliang[minkey]
-        elif 8 in Boss_Skill:
-            Bossxueliang[minkey][0] = min(Bossxueliang[minkey][0]+ Bossxueliang[minkey][2]*0.1,Bossxueliang[minkey][0])
-            #print(minkey,"号boss释放了8-3秒回血")
-        else:
-            Bossxueliang[minkey][0]  = Bossxueliang[minkey][0]-Damage
+
+    ''' BOSS血量和伤害比较。并且考虑要不要8-回血'''
+    if Bossxueliang[minkey][0]-Damage <=0:
+        #print("消除Boss，进入下一秒")#when 伤害超过剩余血量
+        del Bossxueliang[minkey]
+    else:
+        Bossxueliang[minkey][0]  = Bossxueliang[minkey][0]-Damage
+        if 8 in Boss_Skill:
+            Bossxueliang[minkey][0] = min(Bossxueliang[minkey][0] + Bossxueliang[minkey][2] * 0.1,
+                                          Bossxueliang[minkey][0])
+            # print(minkey,"号boss释放了8-3秒回血")
+        if 4 in Boss_Skill:
+            pass
+
 
     return minkey
 
@@ -456,7 +461,7 @@ if __name__ == '__main__':
         shared_dict['max_first_4_result'] = 0  # 初始值
         lock = manager.Lock()
 
-        with multiprocessing.Pool(processes=5) as pool:
+        with multiprocessing.Pool(processes=9) as pool:
             print('进入主进程')
             temp = temp[0:60000]
             results = pool.starmap(process_item, [(shared_dict, lock, item) for item in temp])
