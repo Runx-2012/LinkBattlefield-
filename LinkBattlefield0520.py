@@ -66,8 +66,6 @@ import ini_data
 
 
 
-
-
 '''检查BOSS技能3-3秒时间增加'''
 def special_check_HP(Bossxueliang):
     output = []
@@ -313,8 +311,6 @@ def process_item(shared_dict,lock,item,HP_list,P_list):
         #         print("unlocked")
 
 
-
-
         chkeck_HP = special_check_HP(HP)
         min_key = min(Pgroup)
         # print("current_time = ", current_time)
@@ -323,11 +319,11 @@ def process_item(shared_dict,lock,item,HP_list,P_list):
 
         '''想设计一个最低层数隔断，如果120秒还没跑到这一层，就直接放弃这个组合'''
         if current_time==120:
-            if min_key <=20:
+            if min_key <=19:
                 break
 
 
-
+        '''删除到期的link'''
         if 3 in chkeck_HP:
             if Pgroup[min_key][4] >= 29:
                 del Pgroup[min_key]
@@ -342,25 +338,29 @@ def process_item(shared_dict,lock,item,HP_list,P_list):
             for key in Pgroup:
                 Pgroup[key][0] += 1
 
+        '''检查link池子能不能还有没有剩余'''
+        '''基于池子里补充link'''
         if global_count < len(sorted_indices):  # 检查link池子用没有用尽
             if len(Pgroup) < 4:  ###检查要不要新增link
                 new_key = max(Pgroup.keys()) + 1
                 Pgroup[new_key] = P[sorted_indices[global_count]]
                 final_list.append(sorted_indices[global_count])
-                global_count = global_count + 1
+                global_count = global_count + 1##@
 
+
+        '''For循环，当前的4个link，一个个计算伤害'''
         for key in Pgroup:
             #print(key, Pgroup[key])
-            if 3 in chkeck_HP:
+            if 3 in chkeck_HP:#BOSS技能每3秒扣生命
                 Pgroup[key][4] = Pgroup[key][4] + 1##lifetime+1，更快到达30
             Pgroup[key][4] = Pgroup[key][4] + 1
             Pgroup[key][7] = Pgroup[key][7] + 1
 
             '''计算伤害（计算伤害前先precheck，看看buff）'''
-
             ad, ap, atk_count,cd_reset = atkChk.atk_pre_check(Pgroup, key)
             minkey, defeatchk = check_damage(HP, ad, ap, chkeck_HP, atk_count)
 
+            '''事后结算，同时考虑是不是8-重置角色释放技能 '''
             if ad > 0 or ap > 0:
                 if cd_reset == 1:
                     for key in Pgroup:
@@ -369,6 +369,8 @@ def process_item(shared_dict,lock,item,HP_list,P_list):
                     atk_post_check(Pgroup, key)
 
                 #print(Pgroup[key],"频率+1")
+
+                '''打败了boss就完全跳过这一秒，不计算当前4个中没放技能的人'''
             if defeatchk is False:
                 break#######不确定如果第三秒如果成功结算了，还会不会加CD
         #print("minkey层数===", minkey)
@@ -413,7 +415,7 @@ if __name__ == '__main__':
 
     P_list,HP_list = ini_data.ini_data()
     temp =  filtered_permutations(P_list, first_link=[], depth=5)
-    range =10000
+    range =0
     if range != 0 :
         temp = temp[:range]
 

@@ -1,5 +1,5 @@
 from itertools import permutations
-def filtered_permutations(input_dict,first_link = [],depth=4):
+def filtered_permutations(input_dict,first_link = {},depth=4):
     filtered_items = [key for key, value in input_dict.items() if value[0] <= 6]# 筛选出value小于6的元素
     if first_link == []:
         valid_permutations = list(permutations(filtered_items, depth))
