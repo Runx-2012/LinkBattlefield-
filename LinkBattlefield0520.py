@@ -74,27 +74,19 @@ def special_check_HP(Bossxueliang):
     minkey = min(Bossxueliang)
     #print(Bossxueliang[minkey])
     if Bossxueliang[minkey][1] != 0:
-        if 3 in Bossxueliang[minkey][1]:
-            if Bossxueliang[minkey][3] == 0:
-                pass
-            elif Bossxueliang[minkey][3] % 3 == 0:
-                output.append(3)
-        if 8 in Bossxueliang[minkey][1]:
-            if Bossxueliang[minkey][3] == 0:
-                pass
-            elif Bossxueliang[minkey][3] % 3 == 0:
-                output.append(8)
-        if 4 in Bossxueliang[minkey][1]:
-            if Bossxueliang[minkey][3] == 0:
-                pass
-            elif Bossxueliang[minkey][3] % 3 == 0:
-                output.append(4)
+        skills = set(Bossxueliang[minkey][1])
 
-        if {3, 4,8} & set(Bossxueliang[minkey][1]):
-            Bossxueliang[minkey][3] = Bossxueliang[minkey][3] + 1
-            ##如果BOSS技能有3or8，说明boss和时间有关，boss时间需要不断自加
-        if 9 in Bossxueliang[minkey][1]:  ##特殊技能包括3-时间增加
-                output.append(9)
+        # 检查3/4/8技能并处理时间计数器
+        time_related_skills = {3, 4, 8}
+        if time_related_skills & skills:
+            Bossxueliang[minkey][3] += 1
+            time_counter = Bossxueliang[minkey][3]
+            if time_counter != 0 and time_counter % 3 == 0:
+                output.extend(time_related_skills & skills)
+
+        # 处理特殊技能9
+        if 9 in skills:
+            output.append(9)
     return output
 
 #物伤-1；魔法-2，友军伤害-3，,三次2倍-5，重制-7，概率两倍-9，
@@ -330,8 +322,8 @@ def process_item(shared_dict,lock,item,HP_list,P_list):
 
 
         '''想设计一个最低层数隔断，如果120秒还没跑到这一层，就直接放弃这个组合'''
-        if current_time==60:
-            if min_key <=11:
+        if current_time==120:
+            if min_key <=20:
                 break
 
 
@@ -421,7 +413,7 @@ if __name__ == '__main__':
 
     P_list,HP_list = ini_data.ini_data()
     temp =  filtered_permutations(P_list, first_link=[], depth=5)
-    range =0
+    range =10000
     if range != 0 :
         temp = temp[:range]
 
